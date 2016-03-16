@@ -26,7 +26,7 @@ usage: ./raw_to_counts_fast.py known_miRNA.fasta RAWREADS.fastq output.txt
 A set of known Brassica napus miRNA from the publication: (identical miRNA sequences were removed)
  
      Shen, Enhui et al. "Identification, Evolution, And Expression Partitioning Of miRNAs In 
-     Allopolyploidbrassica Napus". EXBOTJ 66.22 (2015): 7241-7253. Web. 16 Mar. 2016.
+     Allopolyploidbrassica Napus". EXBOTJ 66.22 (2015): 7241-7253.
  
 ######-- RawSeq.fastq
 Brassica napus reads taken directly from sequencing on a MiSeq. 
