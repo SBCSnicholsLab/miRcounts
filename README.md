@@ -16,3 +16,9 @@ A set of known *Brassica napus* miRNA from the publication: (identical miRNA seq
 #####RawReads.fastq
 Sequence reads in fastq format from a *Brassica napus* sample, taken directly from a MiSeq. No pre-processing required -- just be sure to unzip them first, can be done in the command line with this command:
     gunzip filename.fastq.gz
+
+
+
+
+_________
+_This project is licensed under the terms of the MIT license._
