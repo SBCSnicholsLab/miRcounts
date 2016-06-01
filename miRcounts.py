@@ -107,12 +107,15 @@ for line in outlist:
         counts[name] += 1
 
 
-# write my count dictionary into the output file    
+# write my count dictionary into the output file 
+sumCounts = 0
 for key, value in counts.items():
     fileoutput.write("%s\t%s\n" %(key,value)) 
+    sumCounts += value
    
 print("--- RUNTIME: %s minutes ---" % ((time.time() - start_time)/60))
 print "*** Counting complete, check out the output file! ***"
+print("Total known miRNA found: %s" % sumCounts)
 
 knownMiRNAlen.close()
 fastaDB.close()
