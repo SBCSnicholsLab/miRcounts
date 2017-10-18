@@ -21,7 +21,7 @@ knownMiRNA=open(sys.argv[1],'r')
 fileinput=open(sys.argv[2],'r')
 fileoutput=open(sys.argv[3],'w')
 fastaDB = tempfile.NamedTemporaryFile()
-knownMiRNAlen = tempfile.NamedTemporaryFile()
+knownMiRNAlen = open("TEMPmiRlenFILE.txt", 'w+')
 
 ##############################################################################
 # First add the length of each known miRNA sequence to the name because
@@ -43,15 +43,13 @@ justNames = []
 for line in names:
     justNames.append(line.split('>')[1])
 
-###### new WIP
 # for this part:
 namesNums = []  # The new miRNA names with length prefix attached
 namesDB = []  # will need this list of names for the counter in the last part
 for x in range(len(names)):
     namesDB.append(numPrefix[x] + justNames[x].rstrip())
     namesNums.append('>' + numPrefix[x] + justNames[x])
-######    
-
+   
 final = []
 for x in range(len(names)):
     final.append(namesNums[x])
@@ -61,26 +59,24 @@ for x in range(len(names)):
 for part in range(len(final)):
     knownMiRNAlen.write(final[part])
 
+for i in knownMiRNAlen:
+    print i
+
 # Convert the raw fastq file into a fasta file 
 print "*** First we convert the fastq file into a fasta file ***"
-num_reads = SeqIO.convert(fileinput, "fastq", fastaDB, "fasta")
+num_reads = SeqIO.convert(fileinput.name, "fastq", fastaDB.name, "fasta")
 
 ##############################################################################
 # Run BLAST 
 # To make the fasta file into a blast database
 print "*** Making fasta file into Blast database. ***"
-makedb = SP.Popen(['makeblastdb', '-in', fastaDB.name, 
-                 '-dbtype', 'nucl'])
+makedb = SP.Popen(['makeblastdb', '-in', fastaDB.name, '-dbtype', 'nucl'])
 makedb.wait()
 
 # Running the blast (this is a special blast with parameters optimised
 # for short reads):
 print "*** blast database is ready, now the blast starts ***"
-blastseqs = SP.Popen(['blastn', '-query', knownMiRNAlen.name, '-db', 
-					fastaDB.name, '-evalue', '0.01', '-task', 'blastn-short',
-					'-perc_identity', '100', '-strand', 'plus', 
-					'-max_target_seqs', '1000000', '-outfmt', 
-					"6 qseqid evalue length sseqid nident"], stdout=SP.PIPE) 
+blastseqs = SP.Popen(['blastn', '-query', knownMiRNAlen.name, '-db', fastaDB.name, '-evalue', '0.01', '-task', 'blastn-short', '-perc_identity', '100', '-strand', 'plus', '-max_target_seqs', '10000000', '-outfmt', "6 qseqid evalue length sseqid nident"], stdout=SP.PIPE) 
 
 # Since used PIPE to store the blastn output, retrieve it with .communicate()
 blastOutput = blastseqs.communicate()
@@ -99,19 +95,35 @@ for name in namesDB:
     name = name.rsplit('~')[1]
     counts[name] = 0
 
+
+# Make a dictionary of the maximum match length for each read 
+# This is so that I only get the longest possible for each similar miRNA
+#  which are just one shorter dont get counted twice.
+outlist2 = {}
+for line in outlist:
+    seq = line.rsplit('\t')
+    readID = seq[3]
+    readMatchLength = seq[2]
+    if readID not in outlist2:
+        outlist2[readID] = readMatchLength
+    elif readMatchLength > outlist2[readID]:
+        outlist2[readID] = readMatchLength
+
+# now go through the blast output and count up the unique hits
 for line in outlist:
     seq = line.rsplit('\t')
     name = seq[0].rsplit('~')[1]
+    readID = seq[3]
     expect_length = int(seq[0].rsplit('~')[0])
-    if expect_length == int(seq[2]):
+    if expect_length == int(seq[2]) == int(outlist2[readID]):
         counts[name] += 1
-
 
 # write my count dictionary into the output file 
 sumCounts = 0
 for key, value in counts.items():
     fileoutput.write("%s\t%s\n" %(key,value)) 
     sumCounts += value
+
    
 print("--- RUNTIME: %s minutes ---" % ((time.time() - start_time)/60))
 print "*** Counting complete, check out the output file! ***"
