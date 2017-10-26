@@ -5,7 +5,7 @@ This will take raw small RNA reads in fastq format and output counts of
 the known miRNA. 
 This script requires Python V2, Biopython, and Blast+.
  
-usage: ./miRcounts_fast.py known_miRNA RAWREADS.fastq output.txt 
+usage: ./miRcounts.py known_miRNA RAWREADS.fastq output.txt 
 '''
 
 import sys as sys
